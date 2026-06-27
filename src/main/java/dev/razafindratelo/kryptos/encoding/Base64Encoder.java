@@ -9,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public final class Base64Encoder implements Function<byte[], String> {
 
-  private static final byte[] STANDARD_ALPHABET =
+  public static final byte[] STANDARD_ALPHABET =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes();
 
-  private static final byte[] URL_SAFE_ALPHABET =
+  public static final byte[] URL_SAFE_ALPHABET =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".getBytes();
 
   private static final byte PADDING = '=';
