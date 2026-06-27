@@ -1,6 +1,5 @@
 package dev.razafindratelo.kryptos.health;
 
-import dev.razafindratelo.health.Health;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;

@@ -1,4 +1,4 @@
-package dev.razafindratelo.health;
+package dev.razafindratelo.kryptos.health;
 
 public class Health {
 

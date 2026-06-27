@@ -1,4 +1,4 @@
-package dev.razafindratelo.health;
+package dev.razafindratelo.kryptos.health;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
