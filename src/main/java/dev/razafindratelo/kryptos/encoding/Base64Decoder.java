@@ -1,6 +1,10 @@
 package dev.razafindratelo.kryptos.encoding;
 
+import static dev.razafindratelo.kryptos.encoding.Base64Encoder.FOUR_BIT_MASK;
+import static dev.razafindratelo.kryptos.encoding.Base64Encoder.PADDING;
 import static dev.razafindratelo.kryptos.encoding.Base64Encoder.STANDARD_ALPHABET;
+import static dev.razafindratelo.kryptos.encoding.Base64Encoder.TWO_BIT_MASK;
+import static dev.razafindratelo.kryptos.encoding.Base64Encoder.UNSIGNED_BYTE_MASK;
 import static dev.razafindratelo.kryptos.encoding.Base64Encoder.URL_SAFE_ALPHABET;
 import static java.lang.String.format;
 
@@ -15,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 public final class Base64Decoder implements Function<String, byte[]> {
 
   private static final byte INVALID = -1;
+  private static final int ASCII_TABLE_SIZE = 256;
+
   private final byte[] reverseAlphabet;
 
   public static Base64Decoder standard() {
@@ -26,8 +32,9 @@ public final class Base64Decoder implements Function<String, byte[]> {
   }
 
   private static byte[] buildReverseAlphabet(byte[] alphabet) {
-    byte[] reverse = new byte[256];
+    byte[] reverse = new byte[ASCII_TABLE_SIZE];
     Arrays.fill(reverse, INVALID);
+
     for (int i = 0; i < alphabet.length; i++) {
       reverse[alphabet[i]] = (byte) i;
     }
@@ -59,19 +66,21 @@ public final class Base64Decoder implements Function<String, byte[]> {
   }
 
   private int lookupCharacter(byte character) {
-    int value = reverseAlphabet[character & 0xFF];
-    if (value == INVALID) {
+    int value = reverseAlphabet[character & UNSIGNED_BYTE_MASK];
+
+    if (value == INVALID)
       throw new IllegalArgumentException(
           String.format(
-              "Invalid Base64 character: '%c' (ASCII %d)", (char) character, character & 0xFF));
-    }
+              "Invalid Base64 character: '%c' (ASCII %d)",
+              (char) character, character & UNSIGNED_BYTE_MASK));
+
     return value;
   }
 
   public int countPadding(String input) {
     int count = 0;
-    if (input.charAt(input.length() - 1) == '=') count++;
-    if (input.charAt(input.length() - 2) == '=') count++;
+    if (input.charAt(input.length() - 1) == PADDING) count++;
+    if (input.charAt(input.length() - 2) == PADDING) count++;
 
     return count;
   }
@@ -79,8 +88,8 @@ public final class Base64Decoder implements Function<String, byte[]> {
   public byte[] decodeFullGroup(int c0, int c1, int c2, int c3) {
     return new byte[] {
       (byte) ((c0 << 2) | (c1 >> 4)),
-      (byte) (((c1 & 0x0F) << 4) | (c2 >> 2)),
-      (byte) (((c2 & 0x03) << 6) | c3)
+      (byte) (((c1 & FOUR_BIT_MASK) << 4) | (c2 >> 2)),
+      (byte) (((c2 & TWO_BIT_MASK) << 6) | c3)
     };
   }
 
@@ -122,6 +131,8 @@ public final class Base64Decoder implements Function<String, byte[]> {
   }
 
   public byte[] decodeTwoByteRemainder(int c0, int c1, int c2) {
-    return new byte[] {(byte) ((c0 << 2) | (c1 >> 4)), (byte) (((c1 & 0x0F) << 4) | (c2 >> 2))};
+    return new byte[] {
+      (byte) ((c0 << 2) | (c1 >> 4)), (byte) (((c1 & FOUR_BIT_MASK) << 4) | (c2 >> 2))
+    };
   }
 }

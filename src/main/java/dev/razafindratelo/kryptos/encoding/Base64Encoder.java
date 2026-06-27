@@ -15,7 +15,12 @@ public final class Base64Encoder implements Function<byte[], String> {
   public static final byte[] URL_SAFE_ALPHABET =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".getBytes();
 
-  private static final byte PADDING = '=';
+  public static final byte PADDING = '=';
+
+  public static final int UNSIGNED_BYTE_MASK = 0xFF;
+  public static final int SIX_BIT_MASK = 0x3F;
+  public static final int FOUR_BIT_MASK = 0x0F;
+  public static final int TWO_BIT_MASK = 0x03;
 
   private final byte[] alphabet;
 
@@ -52,9 +57,9 @@ public final class Base64Encoder implements Function<byte[], String> {
     int outputIndex = 0;
 
     for (int i = 0; i < fullGroups * 3; i += 3) {
-      int b0 = input[i] & 0xFF;
-      int b1 = input[i + 1] & 0xFF;
-      int b2 = input[i + 2] & 0xFF;
+      int b0 = input[i] & UNSIGNED_BYTE_MASK;
+      int b1 = input[i + 1] & UNSIGNED_BYTE_MASK;
+      int b2 = input[i + 2] & UNSIGNED_BYTE_MASK;
 
       byte[] encoded = encodeFullGroup(b0, b1, b2);
       output[outputIndex++] = encoded[0];
@@ -68,10 +73,10 @@ public final class Base64Encoder implements Function<byte[], String> {
 
   public byte[] encodeFullGroup(int b0, int b1, int b2) {
     return new byte[] {
-      alphabet[(b0 >> 2) & 0x3F],
-      alphabet[((b0 & 0x03) << 4) | ((b1 >> 4) & 0x0F)],
-      alphabet[((b1 & 0x0F) << 2) | ((b2 >> 6) & 0x03)],
-      alphabet[b2 & 0x3F]
+      alphabet[(b0 >> 2) & SIX_BIT_MASK],
+      alphabet[((b0 & TWO_BIT_MASK) << 4) | ((b1 >> 4) & FOUR_BIT_MASK)],
+      alphabet[((b1 & FOUR_BIT_MASK) << 2) | ((b2 >> 6) & TWO_BIT_MASK)],
+      alphabet[b2 & SIX_BIT_MASK]
     };
   }
 
@@ -79,21 +84,25 @@ public final class Base64Encoder implements Function<byte[], String> {
     int start = fullGroups * 3;
 
     return switch (remainder) {
-      case 1 -> encodeOneByteRemainder(input[start] & 0xFF);
-      case 2 -> encodeTwoByteRemainder(input[start] & 0xFF, input[start + 1] & 0xFF);
+      case 1 -> encodeOneByteRemainder(input[start] & UNSIGNED_BYTE_MASK);
+      case 2 ->
+          encodeTwoByteRemainder(
+              input[start] & UNSIGNED_BYTE_MASK, input[start + 1] & UNSIGNED_BYTE_MASK);
       default -> new byte[0];
     };
   }
 
   public byte[] encodeOneByteRemainder(int b0) {
-    return new byte[] {alphabet[(b0 >> 2) & 0x3F], alphabet[(b0 & 0x03) << 4], PADDING, PADDING};
+    return new byte[] {
+      alphabet[(b0 >> 2) & SIX_BIT_MASK], alphabet[(b0 & TWO_BIT_MASK) << 4], PADDING, PADDING
+    };
   }
 
   public byte[] encodeTwoByteRemainder(int b0, int b1) {
     return new byte[] {
-      alphabet[(b0 >> 2) & 0x3F],
-      alphabet[((b0 & 0x03) << 4) | ((b1 >> 4) & 0x0F)],
-      alphabet[(b1 & 0x0F) << 2],
+      alphabet[(b0 >> 2) & SIX_BIT_MASK],
+      alphabet[((b0 & TWO_BIT_MASK) << 4) | ((b1 >> 4) & FOUR_BIT_MASK)],
+      alphabet[(b1 & FOUR_BIT_MASK) << 2],
       PADDING
     };
   }
