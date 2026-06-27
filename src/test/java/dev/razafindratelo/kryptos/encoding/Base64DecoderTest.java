@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -128,6 +131,27 @@ class Base64DecoderTest {
   @Test
   void should_throw_illegal_argument_exception_on_invalid_length_input() {
     assertThrows(IllegalArgumentException.class, () -> standard.apply("TWF"));
+  }
+
+  @RepeatedTest(10)
+  void should_match_jdk_standard_decoder_on_random_input() {
+    byte[] randomBytes = SecureRandom.getSeed(32);
+    String encoded = Base64.getEncoder().encodeToString(randomBytes);
+
+    byte[] actual = standard.apply(encoded);
+    byte[] expected = Base64.getDecoder().decode(encoded);
+
+    assertArrayEquals(expected, actual);
+  }
+
+  @RepeatedTest(10)
+  void should_match_jdk_url_safe_encoder_on_random_input() {
+    byte[] randomBytes = SecureRandom.getSeed(32);
+
+    String actual = Base64Encoder.urlSafe().apply(randomBytes);
+    String expected = Base64.getUrlEncoder().encodeToString(randomBytes);
+
+    assertEquals(expected, actual);
   }
 
   @ParameterizedTest

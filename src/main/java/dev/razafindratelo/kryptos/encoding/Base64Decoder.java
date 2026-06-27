@@ -34,6 +34,30 @@ public final class Base64Decoder implements Function<String, byte[]> {
     return reverse;
   }
 
+  @Override
+  public byte[] apply(String input) {
+    if (input == null) throw new IllegalArgumentException("Input must not be null");
+    if (input.isEmpty()) return new byte[0];
+    if (input.length() % 4 != 0)
+      throw new IllegalArgumentException(
+          format("Invalid Base64 input length: %d, must be a multiple of 4", input.length()));
+
+    byte[] inputBytes = input.getBytes();
+    int paddingCount = countPadding(input);
+    int fullGroups = (inputBytes.length / 4) - (paddingCount > 0 ? 1 : 0);
+
+    byte[] decodedFullGroups = decodeFullGroups(inputBytes, fullGroups);
+    byte[] decodedRemainder =
+        paddingCount > 0 ? decodeRemainder(inputBytes, fullGroups, paddingCount) : new byte[0];
+
+    byte[] output = new byte[decodedFullGroups.length + decodedRemainder.length];
+    System.arraycopy(decodedFullGroups, 0, output, 0, decodedFullGroups.length);
+    System.arraycopy(
+        decodedRemainder, 0, output, decodedFullGroups.length, decodedRemainder.length);
+
+    return output;
+  }
+
   private int lookupCharacter(byte character) {
     int value = reverseAlphabet[character & 0xFF];
     if (value == INVALID) {
@@ -99,29 +123,5 @@ public final class Base64Decoder implements Function<String, byte[]> {
 
   public byte[] decodeTwoByteRemainder(int c0, int c1, int c2) {
     return new byte[] {(byte) ((c0 << 2) | (c1 >> 4)), (byte) (((c1 & 0x0F) << 4) | (c2 >> 2))};
-  }
-
-  @Override
-  public byte[] apply(String input) {
-    if (input == null) throw new IllegalArgumentException("Input must not be null");
-    if (input.isEmpty()) return new byte[0];
-    if (input.length() % 4 != 0)
-      throw new IllegalArgumentException(
-          format("Invalid Base64 input length: %d, must be a multiple of 4", input.length()));
-
-    byte[] inputBytes = input.getBytes();
-    int paddingCount = countPadding(input);
-    int fullGroups = (inputBytes.length / 4) - (paddingCount > 0 ? 1 : 0);
-
-    byte[] decodedFullGroups = decodeFullGroups(inputBytes, fullGroups);
-    byte[] decodedRemainder =
-        paddingCount > 0 ? decodeRemainder(inputBytes, fullGroups, paddingCount) : new byte[0];
-
-    byte[] output = new byte[decodedFullGroups.length + decodedRemainder.length];
-    System.arraycopy(decodedFullGroups, 0, output, 0, decodedFullGroups.length);
-    System.arraycopy(
-        decodedRemainder, 0, output, decodedFullGroups.length, decodedRemainder.length);
-
-    return output;
   }
 }

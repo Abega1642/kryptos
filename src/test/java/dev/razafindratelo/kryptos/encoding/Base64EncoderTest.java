@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -129,6 +132,26 @@ class Base64EncoderTest {
   @Test
   void should_produce_empty_string_on_empty_input() {
     assertEquals("", standard.apply(new byte[0]));
+  }
+
+  @RepeatedTest(10)
+  void should_match_jdk_standard_encoder_on_random_input() {
+    byte[] randomBytes = SecureRandom.getSeed(32);
+
+    String expected = Base64.getEncoder().encodeToString(randomBytes);
+    String actual = Base64Encoder.standard().apply(randomBytes);
+
+    assertEquals(expected, actual);
+  }
+
+  @RepeatedTest(10)
+  void should_match_jdk_url_safe_encoder_on_random_input() {
+    byte[] randomBytes = SecureRandom.getSeed(32);
+
+    String actual = Base64Encoder.urlSafe().apply(randomBytes);
+    String expected = Base64.getUrlEncoder().encodeToString(randomBytes);
+
+    assertEquals(expected, actual);
   }
 
   @ParameterizedTest

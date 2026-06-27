@@ -27,6 +27,26 @@ public final class Base64Encoder implements Function<byte[], String> {
     return new Base64Encoder(URL_SAFE_ALPHABET);
   }
 
+  @Override
+  public String apply(byte[] input) {
+    if (input == null) throw new IllegalArgumentException("Input must not be null");
+    if (input.length == 0) return "";
+
+    int remainder = input.length % 3;
+    int completeGroupLength = input.length / 3;
+
+    byte[] encodedCompleteGroup = encodeFullGroups(input, completeGroupLength);
+    byte[] encodedRemainder = encodeRemainder(input, completeGroupLength, remainder);
+
+    byte[] output = new byte[encodedCompleteGroup.length + encodedRemainder.length];
+
+    System.arraycopy(encodedCompleteGroup, 0, output, 0, encodedCompleteGroup.length);
+    System.arraycopy(
+        encodedRemainder, 0, output, encodedCompleteGroup.length, encodedRemainder.length);
+
+    return new String(output);
+  }
+
   public byte[] encodeFullGroups(byte[] input, int fullGroups) {
     byte[] output = new byte[fullGroups * 4];
     int outputIndex = 0;
@@ -76,25 +96,5 @@ public final class Base64Encoder implements Function<byte[], String> {
       alphabet[(b1 & 0x0F) << 2],
       PADDING
     };
-  }
-
-  @Override
-  public String apply(byte[] input) {
-    if (input == null) throw new IllegalArgumentException("Input must not be null");
-    if (input.length == 0) return "";
-
-    int remainder = input.length % 3;
-    int completeGroupLength = input.length / 3;
-
-    byte[] encodedCompleteGroup = encodeFullGroups(input, completeGroupLength);
-    byte[] encodedRemainder = encodeRemainder(input, completeGroupLength, remainder);
-
-    byte[] output = new byte[encodedCompleteGroup.length + encodedRemainder.length];
-
-    System.arraycopy(encodedCompleteGroup, 0, output, 0, encodedCompleteGroup.length);
-    System.arraycopy(
-        encodedRemainder, 0, output, encodedCompleteGroup.length, encodedRemainder.length);
-
-    return new String(output);
   }
 }
