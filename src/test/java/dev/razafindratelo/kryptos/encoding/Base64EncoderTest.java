@@ -2,8 +2,10 @@ package dev.razafindratelo.kryptos.encoding;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.stream.Stream;
@@ -30,91 +32,110 @@ class Base64EncoderTest {
 
   @Test
   void should_produce_TWFu_on_encoding_Man_bytes() {
-    byte[] result = standard.encodeFullGroup('M', 'a', 'n');
-    assertArrayEquals(new byte[] {'T', 'W', 'F', 'u'}, result);
+    byte[] actual = standard.encodeFullGroup('M', 'a', 'n');
+
+    assertArrayEquals(new byte[] {'T', 'W', 'F', 'u'}, actual);
   }
 
   @Test
   void should_produce_four_bytes_on_any_full_group_encoding() {
-    byte[] result = standard.encodeFullGroup('M', 'a', 'n');
-    assertEquals(4, result.length);
+    byte[] actual = standard.encodeFullGroup('M', 'a', 'n');
+
+    assertEquals(4, actual.length);
   }
 
   @Test
   void should_produce_two_padding_chars_on_one_byte_remainder() {
-    byte[] result = standard.encodeOneByteRemainder('M');
-    assertEquals('=', result[2]);
-    assertEquals('=', result[3]);
+    byte[] actual = standard.encodeOneByteRemainder('M');
+
+    assertEquals('=', actual[2]);
+    assertEquals('=', actual[3]);
   }
 
   @Test
   void should_produce_four_bytes_on_one_byte_remainder() {
-    byte[] result = standard.encodeOneByteRemainder('M');
-    assertEquals(4, result.length);
+    byte[] actual = standard.encodeOneByteRemainder('M');
+
+    assertEquals(4, actual.length);
   }
 
   @Test
   void should_match_jdk_on_one_byte_remainder() {
     byte[] input = new byte[] {'M'};
-    String ours = new String(standard.encodeOneByteRemainder('M'));
-    String jdk = java.util.Base64.getEncoder().encodeToString(input);
-    assertEquals(jdk, ours);
+
+    String actual = new String(standard.encodeOneByteRemainder('M'));
+    String expected = Base64.getEncoder().encodeToString(input);
+
+    assertEquals(expected, actual);
   }
 
   @Test
   void should_produce_one_padding_char_on_two_byte_remainder() {
-    byte[] result = standard.encodeTwoByteRemainder('M', 'a');
-    assertEquals('=', result[3]);
+    byte[] actual = standard.encodeTwoByteRemainder('M', 'a');
+
+    assertEquals('=', actual[3]);
   }
 
   @Test
   void should_produce_four_bytes_on_two_byte_remainder() {
-    byte[] result = standard.encodeTwoByteRemainder('M', 'a');
-    assertEquals(4, result.length);
+    byte[] actual = standard.encodeTwoByteRemainder('M', 'a');
+
+    assertEquals(4, actual.length);
   }
 
   @Test
   void should_match_jdk_on_two_byte_remainder() {
     byte[] input = new byte[] {'M', 'a'};
-    String ours = new String(standard.encodeTwoByteRemainder('M', 'a'));
-    String jdk = java.util.Base64.getEncoder().encodeToString(input);
-    assertEquals(jdk, ours);
+
+    String actual = new String(standard.encodeTwoByteRemainder('M', 'a'));
+    String expected = Base64.getEncoder().encodeToString(input);
+
+    assertEquals(expected, actual);
   }
 
   @Test
   void should_produce_empty_array_on_zero_full_groups() {
-    byte[] result = standard.encodeFullGroups(new byte[0], 0);
-    assertEquals(0, result.length);
+    byte[] actual = standard.encodeFullGroups(new byte[0], 0);
+
+    assertEquals(0, actual.length);
   }
 
   @Test
   void should_produce_four_bytes_per_group_on_full_groups_encoding() {
     byte[] input = "ManMan".getBytes();
-    byte[] result = standard.encodeFullGroups(input, 2);
-    assertEquals(8, result.length);
+
+    byte[] actual = standard.encodeFullGroups(input, 2);
+
+    assertEquals(8, actual.length);
   }
 
   @Test
   void should_match_jdk_on_full_groups_encoding() {
     byte[] input = "Man".getBytes();
-    String ours = new String(standard.encodeFullGroups(input, 1));
-    String jdk = java.util.Base64.getEncoder().encodeToString(input);
-    assertEquals(jdk, ours);
+
+    String actual = new String(standard.encodeFullGroups(input, 1));
+    String expected = Base64.getEncoder().encodeToString(input);
+
+    assertEquals(expected, actual);
   }
 
   @Test
   void should_produce_empty_array_on_zero_remainder() {
     byte[] input = "Man".getBytes();
-    byte[] result = standard.encodeRemainder(input, 1, 0);
-    assertEquals(0, result.length);
+
+    byte[] actual = standard.encodeRemainder(input, 1, 0);
+
+    assertEquals(0, actual.length);
   }
 
   @Test
   void should_produce_two_padding_chars_on_remainder_of_one() {
     byte[] input = "M".getBytes();
-    byte[] result = standard.encodeRemainder(input, 0, 1);
-    assertEquals('=', result[2]);
-    assertEquals('=', result[3]);
+
+    byte[] actual = standard.encodeRemainder(input, 0, 1);
+
+    assertEquals('=', actual[2]);
+    assertEquals('=', actual[3]);
   }
 
   @Test
@@ -139,7 +160,7 @@ class Base64EncoderTest {
     byte[] randomBytes = SecureRandom.getSeed(32);
 
     String expected = Base64.getEncoder().encodeToString(randomBytes);
-    String actual = Base64Encoder.standard().apply(randomBytes);
+    String actual = standard.apply(randomBytes);
 
     assertEquals(expected, actual);
   }
@@ -148,7 +169,7 @@ class Base64EncoderTest {
   void should_match_jdk_url_safe_encoder_on_random_input() {
     byte[] randomBytes = SecureRandom.getSeed(32);
 
-    String actual = Base64Encoder.urlSafe().apply(randomBytes);
+    String actual = urlSafe.apply(randomBytes);
     String expected = Base64.getUrlEncoder().encodeToString(randomBytes);
 
     assertEquals(expected, actual);
@@ -158,7 +179,7 @@ class Base64EncoderTest {
   @MethodSource("provideInputs")
   void should_match_jdk_standard_encoder_on_arbitrary_input(byte[] input) {
     String ours = standard.apply(input);
-    String jdk = java.util.Base64.getEncoder().encodeToString(input);
+    String jdk = Base64.getEncoder().encodeToString(input);
     assertEquals(jdk, ours);
   }
 
@@ -166,7 +187,31 @@ class Base64EncoderTest {
   @MethodSource("provideInputs")
   void should_match_jdk_url_safe_encoder_on_arbitrary_input(byte[] input) {
     String ours = urlSafe.apply(input);
-    String jdk = java.util.Base64.getUrlEncoder().encodeToString(input);
+    String jdk = Base64.getUrlEncoder().encodeToString(input);
     assertEquals(jdk, ours);
+  }
+
+  @Test
+  void should_match_jdk_on_pdf_encoding() throws IOException {
+    var resource = getClass().getResource("/assets/test-base64.pdf");
+    assertNotNull(resource);
+    byte[] pdfBytes = resource.openStream().readAllBytes();
+
+    String actual = standard.apply(pdfBytes);
+    String expected = Base64.getEncoder().encodeToString(pdfBytes);
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  void should_match_jdk_on_png_encoding() throws IOException {
+    var resource = getClass().getResource("/assets/test-base64.png");
+    assertNotNull(resource);
+    byte[] pngBytes = resource.openStream().readAllBytes();
+
+    String actual = standard.apply(pngBytes);
+    String expected = Base64.getEncoder().encodeToString(pngBytes);
+
+    assertEquals(expected, actual);
   }
 }

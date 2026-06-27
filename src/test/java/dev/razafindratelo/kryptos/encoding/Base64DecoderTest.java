@@ -2,8 +2,10 @@ package dev.razafindratelo.kryptos.encoding;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.stream.Stream;
@@ -58,64 +60,75 @@ class Base64DecoderTest {
   @Test
   void should_reconstruct_Man_bytes_on_decoding_TWFu_indices() {
     // T=19, W=22, F=5, u=46
-    byte[] result = standard.decodeFullGroup(19, 22, 5, 46);
-    assertArrayEquals("Man".getBytes(), result);
+    byte[] actual = standard.decodeFullGroup(19, 22, 5, 46);
+
+    assertArrayEquals("Man".getBytes(), actual);
   }
 
   @Test
   void should_produce_three_bytes_on_full_group_decoding() {
-    byte[] result = standard.decodeFullGroup(19, 22, 5, 46);
-    assertEquals(3, result.length);
+    byte[] actual = standard.decodeFullGroup(19, 22, 5, 46);
+
+    assertEquals(3, actual.length);
   }
 
   @Test
   void should_produce_one_byte_on_one_byte_remainder_decoding() {
-    byte[] result = standard.decodeOneByteRemainder(19, 0);
-    assertEquals(1, result.length);
+    byte[] actual = standard.decodeOneByteRemainder(19, 0);
+
+    assertEquals(1, actual.length);
   }
 
   @Test
   void should_match_jdk_on_one_byte_remainder_decoding() {
     // "TQ==" is Base64 for "M": T=19, Q=16
-    byte[] result = standard.decodeOneByteRemainder(19, 16);
-    byte[] jdk = java.util.Base64.getDecoder().decode("TQ==");
-    assertArrayEquals(jdk, result);
+    byte[] actual = standard.decodeOneByteRemainder(19, 16);
+    byte[] expected = Base64.getDecoder().decode("TQ==");
+
+    assertArrayEquals(expected, actual);
   }
 
   @Test
   void should_produce_two_bytes_on_two_byte_remainder_decoding() {
     // "TWE=" is Base64 for "Ma"
-    byte[] result = standard.decodeTwoByteRemainder(19, 22, 4);
-    assertEquals(2, result.length);
+    byte[] actual = standard.decodeTwoByteRemainder(19, 22, 4);
+
+    assertEquals(2, actual.length);
   }
 
   @Test
   void should_match_jdk_on_two_byte_remainder_decoding() {
     // "TWE=" is Base64 for "Ma"
-    byte[] result = standard.decodeTwoByteRemainder(19, 22, 4);
-    byte[] jdk = java.util.Base64.getDecoder().decode("TWE=");
-    assertArrayEquals(jdk, result);
+    byte[] actual = standard.decodeTwoByteRemainder(19, 22, 4);
+    byte[] expected = Base64.getDecoder().decode("TWE=");
+
+    assertArrayEquals(expected, actual);
   }
 
   @Test
   void should_produce_empty_array_on_zero_full_groups() {
-    byte[] result = standard.decodeFullGroups(new byte[0], 0);
-    assertEquals(0, result.length);
+    byte[] actual = standard.decodeFullGroups(new byte[0], 0);
+
+    assertEquals(0, actual.length);
   }
 
   @Test
   void should_produce_three_bytes_per_group_on_full_groups_decoding() {
     byte[] input = "TWFuTWFu".getBytes();
-    byte[] result = standard.decodeFullGroups(input, 2);
-    assertEquals(6, result.length);
+
+    byte[] actual = standard.decodeFullGroups(input, 2);
+
+    assertEquals(6, actual.length);
   }
 
   @Test
   void should_match_jdk_on_full_groups_decoding() {
     byte[] input = "TWFu".getBytes();
-    byte[] result = standard.decodeFullGroups(input, 1);
-    byte[] jdk = java.util.Base64.getDecoder().decode("TWFu");
-    assertArrayEquals(jdk, result);
+
+    byte[] actual = standard.decodeFullGroups(input, 1);
+    byte[] expected = Base64.getDecoder().decode("TWFu");
+
+    assertArrayEquals(expected, actual);
   }
 
   @Test
@@ -158,23 +171,27 @@ class Base64DecoderTest {
   @MethodSource("provideInputs")
   void should_match_jdk_standard_decoder_on_arbitrary_input(String input) {
     byte[] ours = standard.apply(input);
-    byte[] jdk = java.util.Base64.getDecoder().decode(input);
-    assertArrayEquals(jdk, ours);
+    byte[] expected = Base64.getDecoder().decode(input);
+
+    assertArrayEquals(expected, ours);
   }
 
   @ParameterizedTest
   @MethodSource("provideUrlSafeInputs")
   void should_match_jdk_url_safe_decoder_on_arbitrary_input(String input) {
     byte[] ours = urlSafe.apply(input);
-    byte[] jdk = java.util.Base64.getUrlDecoder().decode(input);
-    assertArrayEquals(jdk, ours);
+    byte[] expected = Base64.getUrlDecoder().decode(input);
+
+    assertArrayEquals(expected, ours);
   }
 
   @ParameterizedTest
   @MethodSource("provideRawInputs")
   void should_be_inverse_of_encoder_on_arbitrary_input(byte[] rawInput) {
     String encoded = Base64Encoder.standard().apply(rawInput);
+
     byte[] decoded = standard.apply(encoded);
+
     assertArrayEquals(rawInput, decoded);
   }
 
@@ -200,5 +217,31 @@ class Base64DecoderTest {
     // '+' and '/' are valid in standard but invalid in URL-safe
     assertThrows(IllegalArgumentException.class, () -> urlSafe.apply("TW+u"));
     assertThrows(IllegalArgumentException.class, () -> urlSafe.apply("TW/u"));
+  }
+
+  @Test
+  void should_match_jdk_on_pdf_decoding() throws IOException {
+    var resource = getClass().getResource("/assets/test-base64.pdf");
+    assertNotNull(resource);
+    byte[] pdfBytes = resource.openStream().readAllBytes();
+    String encoded = Base64.getEncoder().encodeToString(pdfBytes);
+
+    byte[] actual = standard.apply(encoded);
+    byte[] expected = Base64.getDecoder().decode(encoded);
+
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  void should_match_jdk_on_png_decoding() throws IOException {
+    var resource = getClass().getResource("/assets/test-base64.png");
+    assertNotNull(resource);
+    byte[] pngBytes = resource.openStream().readAllBytes();
+    String encoded = Base64.getEncoder().encodeToString(pngBytes);
+
+    byte[] actual = standard.apply(encoded);
+    byte[] expected = Base64.getDecoder().decode(encoded);
+
+    assertArrayEquals(expected, actual);
   }
 }
