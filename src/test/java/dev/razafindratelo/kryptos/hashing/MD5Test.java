@@ -22,12 +22,18 @@ class MD5Test {
   private final MD5 md5 = MD5.getInstance();
 
   static Stream<Arguments> provideKnownVectors() {
-    return Stream.of(
-        Arguments.of("", "d41d8cd98f00b204e9800998ecf8427e"),
-        Arguments.of("a", "0cc175b9c0f1b6a831c399e269772661"),
-        Arguments.of("abc", "900150983cd24fb0d6963f7d28e17f72"),
-        Arguments.of("message digest", "f96b697d7cb7938d525a2f31aaf161d0"),
-        Arguments.of("abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b"));
+    return Stream.of("", "a", "abc", "message digest", "abcdefghijklmnopqrstuvwxyz")
+        .map(
+            input -> {
+              try {
+                byte[] digest = MessageDigest.getInstance("MD5").digest(input.getBytes());
+                StringBuilder hex = new StringBuilder();
+                for (byte b : digest) hex.append(String.format("%02x", b & 0xFF));
+                return Arguments.of(input, hex.toString());
+              } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 
   private byte[] jdkMd5(byte[] input) throws NoSuchAlgorithmException {

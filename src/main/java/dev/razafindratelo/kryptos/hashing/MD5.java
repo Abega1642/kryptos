@@ -1,5 +1,6 @@
 package dev.razafindratelo.kryptos.hashing;
 
+import static dev.razafindratelo.kryptos.hashing.HashingUtils.BLOCK_SIZE_BYTES;
 import static java.lang.String.format;
 
 import java.nio.ByteBuffer;
@@ -16,13 +17,8 @@ public final class MD5 implements Function<byte[], byte[]> {
   private static final int INIT_C = 0x98BADCFE;
   private static final int INIT_D = 0x10325476;
 
-  private static final int BLOCK_SIZE_BYTES = 64;
   private static final int MESSAGE_SCHEDULE_SIZE = 16;
   private static final int ROUND_COUNT = 64;
-  private static final int LENGTH_FIELD_BYTES = 8;
-  private static final int PADDING_THRESHOLD = 56;
-  private static final int UNSIGNED_BYTE_MASK = 0xFF;
-  private static final int HIGH_BIT = 0x80;
 
   private static final int[] K = {
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
@@ -56,25 +52,6 @@ public final class MD5 implements Function<byte[], byte[]> {
     return INSTANCE;
   }
 
-  public byte[] pad(byte[] input) {
-    long messageLengthBits = (long) input.length * 8;
-    int paddingBytes = PADDING_THRESHOLD - (input.length % BLOCK_SIZE_BYTES);
-
-    if (paddingBytes <= 0) {
-      paddingBytes += BLOCK_SIZE_BYTES;
-    }
-
-    byte[] padded = new byte[input.length + paddingBytes + LENGTH_FIELD_BYTES];
-    System.arraycopy(input, 0, padded, 0, input.length);
-    padded[input.length] = (byte) HIGH_BIT;
-
-    ByteBuffer.wrap(padded, padded.length - LENGTH_FIELD_BYTES, LENGTH_FIELD_BYTES)
-        .order(ByteOrder.LITTLE_ENDIAN)
-        .putLong(messageLengthBits);
-
-    return padded;
-  }
-
   @Override
   public byte[] apply(byte[] input) {
     if (input == null) throw new IllegalArgumentException("Input must not be null");
@@ -82,14 +59,15 @@ public final class MD5 implements Function<byte[], byte[]> {
     byte[] padded = pad(input);
     int[] state = {INIT_A, INIT_B, INIT_C, INIT_D};
 
-    for (int offset = 0; offset < padded.length; offset += BLOCK_SIZE_BYTES) {
-      byte[] block = new byte[BLOCK_SIZE_BYTES];
-      System.arraycopy(padded, offset, block, 0, BLOCK_SIZE_BYTES);
-      int[] messageSchedule = toMessageSchedule(block);
-      state = compressBlock(state, messageSchedule);
+    for (byte[] block : HashingUtils.splitIntoBlocks(padded, BLOCK_SIZE_BYTES)) {
+      state = compressBlock(state, toMessageSchedule(block));
     }
 
     return toDigest(state);
+  }
+
+  public byte[] pad(byte[] input) {
+    return HashingUtils.pad(input, ByteOrder.LITTLE_ENDIAN);
   }
 
   public int[] toMessageSchedule(byte[] block) {
@@ -161,18 +139,10 @@ public final class MD5 implements Function<byte[], byte[]> {
   }
 
   public byte[] toDigest(int[] state) {
-    ByteBuffer buffer = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN);
-    for (int word : state) {
-      buffer.putInt(word);
-    }
-    return buffer.array();
+    return HashingUtils.toDigest(state, ByteOrder.LITTLE_ENDIAN);
   }
 
   public String toHexString(byte[] digest) {
-    StringBuilder sb = new StringBuilder();
-    for (byte b : digest) {
-      sb.append(format("%02x", b & UNSIGNED_BYTE_MASK));
-    }
-    return sb.toString();
+    return HashingUtils.toHexString(digest);
   }
 }
