@@ -3,8 +3,10 @@ package dev.razafindratelo.kryptos.hashing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -243,5 +245,29 @@ class MD5Test {
     byte[] input = "abc".getBytes();
 
     assertArrayEquals(md5.apply(input), md5.apply(input));
+  }
+
+  @Test
+  void should_produce_consistent_md5_on_pdf() throws IOException, NoSuchAlgorithmException {
+    var resource = getClass().getResource("/assets/test-base64.pdf");
+    assertNotNull(resource);
+    byte[] pdfBytes = resource.openStream().readAllBytes();
+
+    byte[] actual = md5.apply(pdfBytes);
+    byte[] expected = jdkMd5(pdfBytes);
+
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  void should_produce_consistent_md5_on_png() throws IOException, NoSuchAlgorithmException {
+    var resource = getClass().getResource("/assets/test-base64.png");
+    assertNotNull(resource);
+    byte[] pngBytes = resource.openStream().readAllBytes();
+
+    byte[] actual = md5.apply(pngBytes);
+    byte[] expected = jdkMd5(pngBytes);
+
+    assertArrayEquals(expected, actual);
   }
 }

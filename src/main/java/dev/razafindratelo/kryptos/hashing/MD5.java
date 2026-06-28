@@ -1,6 +1,7 @@
 package dev.razafindratelo.kryptos.hashing;
 
 import static dev.razafindratelo.kryptos.hashing.HashingUtils.BLOCK_SIZE_BYTES;
+import static dev.razafindratelo.kryptos.hashing.HashingUtils.WORD_SIZE_BITS;
 import static java.lang.String.format;
 
 import java.nio.ByteBuffer;
@@ -80,7 +81,7 @@ public final class MD5 implements Function<byte[], byte[]> {
   }
 
   public int leftRotate(int value, int shift) {
-    return (value << shift) | (value >>> (32 - shift));
+    return (value << shift) | (value >>> (WORD_SIZE_BITS - shift));
   }
 
   public int f(int b, int c, int d) {

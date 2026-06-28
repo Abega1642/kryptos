@@ -3,8 +3,10 @@ package dev.razafindratelo.kryptos.hashing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -248,6 +250,30 @@ class SHA256Test {
 
     byte[] actual = sha256.apply(randomBytes);
     byte[] expected = jdkSha256(randomBytes);
+
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  void should_produce_consistent_sha256_on_pdf() throws IOException, NoSuchAlgorithmException {
+    var resource = getClass().getResource("/assets/test-base64.pdf");
+    assertNotNull(resource);
+    byte[] pdfBytes = resource.openStream().readAllBytes();
+
+    byte[] actual = sha256.apply(pdfBytes);
+    byte[] expected = jdkSha256(pdfBytes);
+
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  void should_produce_consistent_sha256_on_png() throws IOException, NoSuchAlgorithmException {
+    var resource = getClass().getResource("/assets/test-base64.png");
+    assertNotNull(resource);
+    byte[] pngBytes = resource.openStream().readAllBytes();
+
+    byte[] actual = sha256.apply(pngBytes);
+    byte[] expected = jdkSha256(pngBytes);
 
     assertArrayEquals(expected, actual);
   }

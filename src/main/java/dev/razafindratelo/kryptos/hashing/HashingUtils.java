@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 public final class HashingUtils {
 
   public static final int BLOCK_SIZE_BYTES = 64;
-  private static final int UNSIGNED_BYTE_MASK = 0xFF;
-  private static final int HIGH_BIT = 0x80;
-  private static final int LENGTH_FIELD_BYTES = 8;
-  private static final int PADDING_THRESHOLD = 56;
+  public static final int UNSIGNED_BYTE_MASK = 0xFF;
+  public static final int HIGH_BIT = 0x80;
+  public static final int LENGTH_FIELD_BYTES = 8;
+  public static final int PADDING_THRESHOLD = 56;
+  public static final int WORD_SIZE_BITS = 32;
+  public static final int INITIAL_SCHEDULE_SIZE = 16;
 
   public static byte[] pad(byte[] input, ByteOrder byteOrder) {
     long messageLengthBits = (long) input.length * 8;
