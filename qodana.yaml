@@ -41,7 +41,6 @@ include:
   - name: AnonymousInnerClass
   - name: ClassMayBeInterface
   - name: CyclomaticComplexityInspection
-  - name: MagicNumber
   - name: MagicConstant
   - name: NewObjectEquality
   - name: MethodOnlyUsedFromInnerClass
