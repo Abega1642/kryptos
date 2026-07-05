@@ -1,6 +1,5 @@
 package dev.razafindratelo.kryptos.encryption.symmetric.block_cypher;
 
-import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,8 +17,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 class AESTest {
 
   private byte[] jdkEncrypt(byte[] block, byte[] key) throws Exception {
-    Cipher cipher = Cipher.getInstance(format("%s/ECB/NoPadding", "AES"));
+    Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
     cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
+
     return cipher.doFinal(block);
   }
 
