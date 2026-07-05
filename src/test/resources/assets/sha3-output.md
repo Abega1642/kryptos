@@ -1,0 +1,11 @@
+### sha-3 of the pdf file:
+
+```
+651867a9b98a5a9d46712fa3b5a1c949d6a8d9983f9777670445b6318cf21025
+```
+
+### sha-3 of the image file:
+
+```
+233ba84a575e59c3753579d66d9af069a29a77c93a9d9f4dd838d040136ef991
+```
