@@ -12,7 +12,6 @@ include:
   - name: LombokGetterMayBeUsed
   - name: LombokSetterMayBeUsed
   - name: MethodWithMoreThanThreeNegations
-  - name: MethodWithMultipleLoops
   - name: MethodWithMultipleReturnPoints
   - name: MethodWithTooManyParameters
   - name: OverlyComplexMethod
