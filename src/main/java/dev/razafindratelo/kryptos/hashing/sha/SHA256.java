@@ -1,9 +1,10 @@
-package dev.razafindratelo.kryptos.hashing;
+package dev.razafindratelo.kryptos.hashing.sha;
 
 import static dev.razafindratelo.kryptos.hashing.HashingUtils.BLOCK_SIZE_BYTES;
 import static dev.razafindratelo.kryptos.hashing.HashingUtils.INITIAL_SCHEDULE_SIZE;
 import static dev.razafindratelo.kryptos.hashing.HashingUtils.WORD_SIZE_BITS;
 
+import dev.razafindratelo.kryptos.hashing.HashingUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.function.Function;

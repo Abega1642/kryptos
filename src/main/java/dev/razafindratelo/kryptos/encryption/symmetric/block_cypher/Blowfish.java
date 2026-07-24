@@ -300,6 +300,26 @@ public final class Blowfish implements BiFunction<byte[], byte[], byte[]> {
     return INSTANCE;
   }
 
+  public static int[] getInts(int[] p, int[][] s, int pSize, int sBoxCount, int sBoxSize) {
+    int[] state = new int[pSize + sBoxCount * sBoxSize];
+    System.arraycopy(p, 0, state, 0, pSize);
+
+    for (int i = 0; i < sBoxCount; i++) {
+      System.arraycopy(s[i], 0, state, pSize + i * sBoxSize, sBoxSize);
+    }
+
+    return state;
+  }
+
+  public int[] initState() {
+    int[] p = P_INIT.clone();
+    int[][] s = new int[S_BOX_COUNT][S_BOX_SIZE];
+    for (int i = 0; i < S_BOX_COUNT; i++) {
+      s[i] = S_INIT[i].clone();
+    }
+    return getInts(p, s, P_SIZE, S_BOX_COUNT, S_BOX_SIZE);
+  }
+
   public int[] initializeState(byte[] key) {
     if (key == null || key.length == 0)
       throw new IllegalArgumentException("Key must not be null or empty");
@@ -337,12 +357,7 @@ public final class Blowfish implements BiFunction<byte[], byte[], byte[]> {
       }
     }
 
-    int[] state = new int[P_SIZE + S_BOX_COUNT * S_BOX_SIZE];
-    System.arraycopy(p, 0, state, 0, P_SIZE);
-    for (int i = 0; i < S_BOX_COUNT; i++) {
-      System.arraycopy(s[i], 0, state, P_SIZE + i * S_BOX_SIZE, S_BOX_SIZE);
-    }
-    return state;
+    return getInts(p, s, P_SIZE, S_BOX_COUNT, S_BOX_SIZE);
   }
 
   public int fFunction(int x, int[] p, int[][] s) {

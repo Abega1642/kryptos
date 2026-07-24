@@ -2,7 +2,7 @@ package dev.razafindratelo.kryptos.encryption.asymmetric.rsa;
 
 import static java.lang.String.format;
 
-import dev.razafindratelo.kryptos.hashing.SHA256;
+import dev.razafindratelo.kryptos.hashing.sha.SHA256;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;

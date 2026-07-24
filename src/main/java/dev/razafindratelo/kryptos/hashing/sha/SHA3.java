@@ -1,5 +1,6 @@
-package dev.razafindratelo.kryptos.hashing;
+package dev.razafindratelo.kryptos.hashing.sha;
 
+import dev.razafindratelo.kryptos.hashing.HashingUtils;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
